@@ -4,6 +4,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 
 from danswer.auth.users import current_admin_user
+from danswer.auth.users import get_jwt_strategy
 from danswer.auth.users import User
 from danswer.configs.app_configs import WEB_DOMAIN
 from danswer.db.engine import get_session_with_tenant
@@ -12,12 +13,14 @@ from danswer.server.settings.store import load_settings
 from danswer.server.settings.store import store_settings
 from danswer.setup import setup_danswer
 from danswer.utils.logger import setup_logger
+from ee.danswer.auth.users import current_cloud_superuser_user
 from ee.danswer.configs.app_configs import STRIPE_SECRET_KEY
 from ee.danswer.server.tenants.access import control_plane_dep
 from ee.danswer.server.tenants.billing import fetch_billing_information
 from ee.danswer.server.tenants.billing import fetch_tenant_stripe_information
 from ee.danswer.server.tenants.models import BillingInformation
 from ee.danswer.server.tenants.models import CreateTenantRequest
+from ee.danswer.server.tenants.models import ImpersonateRequest
 from ee.danswer.server.tenants.models import ProductGatingRequest
 from ee.danswer.server.tenants.provisioning import add_users_to_tenant
 from ee.danswer.server.tenants.provisioning import ensure_schema_exists
@@ -132,3 +135,13 @@ async def create_customer_portal_session(_: User = Depends(current_admin_user)) 
     except Exception as e:
         logger.exception("Failed to create customer portal session")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/impersonate")
+async def impersonate_user(
+    impersonate_request: ImpersonateRequest,
+    _: User = Depends(current_cloud_superuser_user),
+):
+    strategy = get_jwt_strategy()
+    token = await strategy.write_token(impersonate_request.email)
+    print(token)

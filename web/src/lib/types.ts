@@ -34,7 +34,7 @@ export interface User {
   id: string;
   email: string;
   is_active: string;
-  is_superuser: string;
+  is_superuser: boolean;
   is_verified: string;
   role: UserRole;
   preferences: UserPreferences;
@@ -42,6 +42,7 @@ export interface User {
   current_token_created_at?: Date;
   current_token_expiry_length?: number;
   oidc_expiry?: Date;
+  is_cloud_superuser?: boolean;
   organization_name: string | null;
 }
 
