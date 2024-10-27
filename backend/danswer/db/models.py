@@ -957,6 +957,8 @@ class ChatSession(Base):
         String, nullable=True, default=None
     )
 
+    admin_created: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     # the latest "overrides" specified by the user. These take precedence over
     # the attached persona. However, overrides specified directly in the
     # `send-message` call will take precedence over these.
@@ -985,6 +987,11 @@ class ChatSession(Base):
         "ChatMessage", back_populates="chat_session"
     )
     persona: Mapped["Persona"] = relationship("Persona")
+
+    @property
+    def visible(self) -> bool:
+        """Determines if this chat session should be visible to the regular user"""
+        return not self.admin_created
 
 
 class ChatMessage(Base):

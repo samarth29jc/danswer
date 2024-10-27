@@ -5,10 +5,12 @@ from fastapi import HTTPException
 
 from danswer.auth.users import current_admin_user
 from danswer.auth.users import get_jwt_strategy
+from danswer.auth.users import get_tenant_id_for_email
 from danswer.auth.users import User
 from danswer.configs.app_configs import WEB_DOMAIN
 from danswer.db.engine import get_session_with_tenant
 from danswer.db.notification import create_notification
+from danswer.db.users import get_user_by_email
 from danswer.server.settings.store import load_settings
 from danswer.server.settings.store import store_settings
 from danswer.setup import setup_danswer
@@ -140,8 +142,26 @@ async def create_customer_portal_session(_: User = Depends(current_admin_user)) 
 @router.post("/impersonate")
 async def impersonate_user(
     impersonate_request: ImpersonateRequest,
-    _: User = Depends(current_cloud_superuser_user),
+    user: User = Depends(current_cloud_superuser_user),
 ):
     strategy = get_jwt_strategy()
-    token = await strategy.write_token(impersonate_request.email)
-    print(token)
+    tenant_id = get_tenant_id_for_email(impersonate_request.email)
+    with get_session_with_tenant(tenant_id) as tennat_session:
+        user = get_user_by_email(impersonate_request.email, tennat_session)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        token = await strategy.write_token(user, True)
+        from fastapi.responses import JSONResponse
+
+        response = JSONResponse({})
+        # Set the JWT token as a cookie
+        response.set_cookie(
+            key="fastapiusersauth",
+            value=token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+        )
+        return response

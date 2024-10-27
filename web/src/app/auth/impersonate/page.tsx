@@ -2,10 +2,11 @@
 import AuthFlowContainer from "@/components/auth/AuthFlowContainer";
 import { HealthCheckBanner } from "@/components/health/healthcheck";
 import { useUser } from "@/components/user/UserProvider";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function ImpersonatePage() {
+  const router = useRouter();
   const { user, isLoadingUser, isCloudSuperuser } = useUser();
 
   if (isLoadingUser) {
@@ -31,7 +32,9 @@ export default function ImpersonatePage() {
       },
       body: JSON.stringify({ email, api_key: apiKey }),
     });
-    console.log(response);
+    if (response.ok) {
+      router.push("/search");
+    }
   };
 
   return (

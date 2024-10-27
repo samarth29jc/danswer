@@ -138,6 +138,8 @@ CURRENT_TENANT_ID_CONTEXTVAR = contextvars.ContextVar(
     "current_tenant_id", default=POSTGRES_DEFAULT_SCHEMA
 )
 
+ADMIN_USER_CONTEXTVAR = contextvars.ContextVar("admin_user", default=False)
+
 # Prefix used for all tenant ids
 TENANT_ID_PREFIX = "tenant_"
 
