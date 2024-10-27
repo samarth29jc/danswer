@@ -80,8 +80,8 @@ export default function ImpersonatePage() {
           onSubmit={handleImpersonate}
         >
           {({ errors, touched }) => (
-            <Form className="items-stretch  gap-y-2 flex-col">
-              <div className="relative min-h-[76px]">
+            <Form className="flex flex-col items-stretch gap-y-2">
+              <div className="relative">
                 <Field
                   type="email"
                   name="email"
@@ -123,7 +123,7 @@ export default function ImpersonatePage() {
           )}
         </Formik>
 
-        <div className="text-sm text-text-500 mt-2 text-center px-4 rounded-md">
+        <div className="text-sm text-text-500 mt-4 text-center px-4 rounded-md">
           Note: This feature is only available for @danswer.ai administrators
         </div>
       </div>

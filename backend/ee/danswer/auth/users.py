@@ -74,19 +74,17 @@ def get_default_admin_user_emails_() -> list[str]:
     return []
 
 
-async def current_cloud_superuser_user(
+async def current_cloud_superuser(
+    request: Request,
     user: User | None = Depends(current_admin_user),
 ) -> User | None:
+    api_key = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if api_key != SUPER_CLOUD_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
     if user and user.email not in SUPER_USERS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. User must be a cloud superuser to perform this action.",
         )
     return user
-
-
-def super_cloud_user_dep(request: Request) -> User:
-    api_key = request.headers.get("Authorization", "").replace("Bearer ", "")
-    if api_key != SUPER_CLOUD_API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return None

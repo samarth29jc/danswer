@@ -988,11 +988,6 @@ class ChatSession(Base):
     )
     persona: Mapped["Persona"] = relationship("Persona")
 
-    @property
-    def visible(self) -> bool:
-        """Determines if this chat session should be visible to the regular user"""
-        return not self.admin_created
-
 
 class ChatMessage(Base):
     """Note, the first message in a chain has no contents, it's a workaround to allow edits

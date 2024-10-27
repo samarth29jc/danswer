@@ -17,8 +17,7 @@ from danswer.server.settings.store import load_settings
 from danswer.server.settings.store import store_settings
 from danswer.setup import setup_danswer
 from danswer.utils.logger import setup_logger
-from ee.danswer.auth.users import current_cloud_superuser_user
-from ee.danswer.auth.users import super_cloud_user_dep
+from ee.danswer.auth.users import current_cloud_superuser
 from ee.danswer.configs.app_configs import STRIPE_SECRET_KEY
 from ee.danswer.server.tenants.access import control_plane_dep
 from ee.danswer.server.tenants.billing import fetch_billing_information
@@ -145,8 +144,7 @@ async def create_customer_portal_session(_: User = Depends(current_admin_user)) 
 @router.post("/impersonate")
 async def impersonate_user(
     impersonate_request: ImpersonateRequest,
-    user: User = Depends(current_cloud_superuser_user),
-    __: str = Depends(super_cloud_user_dep),
+    _: User = Depends(current_cloud_superuser),
 ) -> Response:
     """Allows a cloud superuser to impersonate another user by generating an impersonation JWT token"""
     tenant_id = get_tenant_id_for_email(impersonate_request.email)

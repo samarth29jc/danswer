@@ -51,6 +51,8 @@ def get_chat_session_by_id(
     is_shared: bool = False,
 ) -> ChatSession:
     stmt = select(ChatSession).where(ChatSession.id == chat_session_id)
+    if not ADMIN_USER_CONTEXTVAR.get():
+        stmt = stmt.where(ChatSession.admin_created.is_(False))
 
     if is_shared:
         stmt = stmt.where(ChatSession.shared_status == ChatSessionSharedStatus.PUBLIC)

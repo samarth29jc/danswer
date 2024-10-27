@@ -518,7 +518,7 @@ class TenantAwareJWTStrategy(JWTStrategy):
             "tenant_id": tenant_id,
         }
         if impersonate:
-            data["impersonate"] = ["true"]
+            data["impersonate"] = "true"
         return data
 
     async def write_impersonate_token(self, user: User) -> str:
