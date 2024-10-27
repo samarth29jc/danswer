@@ -39,7 +39,6 @@ def add_tenant_id_middleware(app: FastAPI, logger: logging.LoggerAdapter) -> Non
                             raise HTTPException(
                                 status_code=400, detail="Invalid tenant ID format"
                             )
-                        print(payload)
                         if payload.get("impersonate") == "true":
                             ADMIN_USER_CONTEXTVAR.set(True)
                     except jwt.InvalidTokenError:
