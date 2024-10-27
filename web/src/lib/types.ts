@@ -34,7 +34,7 @@ export interface User {
   id: string;
   email: string;
   is_active: string;
-  is_superuser: boolean;
+  is_superuser: string;
   is_verified: string;
   role: UserRole;
   preferences: UserPreferences;
