@@ -30,8 +30,8 @@ from ee.danswer.server.tenants.provisioning import add_users_to_tenant
 from ee.danswer.server.tenants.provisioning import ensure_schema_exists
 from ee.danswer.server.tenants.provisioning import run_alembic_migrations
 from ee.danswer.server.tenants.provisioning import user_owns_a_tenant
-from shared_configs.configs import CURRENT_TENANT_ID_CONTEXTVAR
 from shared_configs.configs import MULTI_TENANT
+from shared_configs.contextvars import CURRENT_TENANT_ID_CONTEXTVAR
 
 
 stripe.api_key = STRIPE_SECRET_KEY

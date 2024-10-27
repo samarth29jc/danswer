@@ -10,10 +10,10 @@ from fastapi import Response
 
 from danswer.configs.app_configs import USER_AUTH_SECRET
 from danswer.db.engine import is_valid_schema_name
-from shared_configs.configs import ADMIN_USER_CONTEXTVAR
-from shared_configs.configs import CURRENT_TENANT_ID_CONTEXTVAR
 from shared_configs.configs import MULTI_TENANT
 from shared_configs.configs import POSTGRES_DEFAULT_SCHEMA
+from shared_configs.contextvars import CLOUD_SUPERUSER_CONTEXTVAR
+from shared_configs.contextvars import CURRENT_TENANT_ID_CONTEXTVAR
 
 
 def add_tenant_id_middleware(app: FastAPI, logger: logging.LoggerAdapter) -> None:
@@ -40,7 +40,7 @@ def add_tenant_id_middleware(app: FastAPI, logger: logging.LoggerAdapter) -> Non
                                 status_code=400, detail="Invalid tenant ID format"
                             )
                         if payload.get("impersonate") == "true":
-                            ADMIN_USER_CONTEXTVAR.set(True)
+                            CLOUD_SUPERUSER_CONTEXTVAR.set(True)
                     except jwt.InvalidTokenError:
                         tenant_id = POSTGRES_DEFAULT_SCHEMA
                     except Exception as e:

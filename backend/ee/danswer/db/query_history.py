@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from danswer.db.models import ChatMessage
 from danswer.db.models import ChatSession
-from shared_configs.configs import ADMIN_USER_CONTEXTVAR
+from shared_configs.contextvars import CLOUD_SUPERUSER_CONTEXTVAR
 
 SortByOptions = Literal["time_sent"]
 
@@ -30,7 +30,7 @@ def fetch_chat_sessions_eagerly_by_time(
     filters: list[ColumnElement | BinaryExpression] = [
         ChatSession.time_created.between(start, end)
     ]
-    if not ADMIN_USER_CONTEXTVAR.get():
+    if not CLOUD_SUPERUSER_CONTEXTVAR.get():
         filters.append(ChatSession.admin_created.is_(False))
     if initial_id:
         filters.append(ChatSession.id < initial_id)
