@@ -3,11 +3,19 @@ import AuthFlowContainer from "@/components/auth/AuthFlowContainer";
 import { HealthCheckBanner } from "@/components/health/healthcheck";
 import { useUser } from "@/components/user/UserProvider";
 import { redirect, useRouter } from "next/navigation";
-import { useState } from "react";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import { usePopup } from "@/components/admin/connectors/Popup";
+
+const ImpersonateSchema = Yup.object().shape({
+  email: Yup.string().email("Invalid email").required("Required"),
+  apiKey: Yup.string().required("Required"),
+});
 
 export default function ImpersonatePage() {
   const router = useRouter();
   const { user, isLoadingUser, isCloudSuperuser } = useUser();
+  const { popup, setPopup } = usePopup();
 
   if (isLoadingUser) {
     return null;
@@ -20,25 +28,43 @@ export default function ImpersonatePage() {
   if (!isCloudSuperuser) {
     redirect("/search");
   }
-  const [email, setEmail] = useState("");
-  const [apiKey, setApiKey] = useState("");
 
-  const handleImpersonate = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    const response = await fetch("/api/tenants/impersonate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, api_key: apiKey }),
-    });
-    if (response.ok) {
-      router.push("/search");
+  const handleImpersonate = async (values: {
+    email: string;
+    apiKey: string;
+  }) => {
+    try {
+      const response = await fetch("/api/tenants/impersonate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${values.apiKey}`, // Move API key to Authorization header
+        },
+        body: JSON.stringify({ email: values.email }), // Only send non-sensitive data in body
+        credentials: "same-origin", // Ensures cookies are sent with request
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setPopup({
+          message: errorData.detail || "Failed to impersonate user",
+          type: "error",
+        });
+      } else {
+        router.push("/search");
+      }
+    } catch (error) {
+      setPopup({
+        message:
+          error instanceof Error ? error.message : "Failed to impersonate user",
+        type: "error",
+      });
     }
   };
 
   return (
     <AuthFlowContainer>
+      {popup}
       <div className="absolute top-10x w-full">
         <HealthCheckBanner />
       </div>
@@ -48,39 +74,56 @@ export default function ImpersonatePage() {
           Impersonate User
         </h2>
 
-        <div className="flex flex-col space-y-6">
-          <div className="relative">
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              name="email"
-              placeholder="Enter user email to impersonate"
-              className="w-full px-4 py-3 border border-border rounded-lg bg-input focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
-              required
-            />
-          </div>
+        <Formik
+          initialValues={{ email: "", apiKey: "" }}
+          validationSchema={ImpersonateSchema}
+          onSubmit={handleImpersonate}
+        >
+          {({ errors, touched }) => (
+            <Form className="items-stretch  gap-y-2 flex-col">
+              <div className="relative min-h-[76px]">
+                <Field
+                  type="email"
+                  name="email"
+                  placeholder="Enter user email to impersonate"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-input focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+                />
+                <div className="h-8">
+                  {errors.email && touched.email && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {errors.email}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          <div className="relative">
-            <input
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              type="password"
-              name="api_key"
-              placeholder="Enter API Key"
-              className="w-full px-4 py-3 border border-border rounded-lg bg-input focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
-              required
-            />
-          </div>
+              <div className="relative">
+                <Field
+                  type="password"
+                  name="apiKey"
+                  placeholder="Enter API Key"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-input focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+                />
+                <div className="h-8">
+                  {errors.apiKey && touched.apiKey && (
+                    <div className="text-red-500 text-sm mt-1">
+                      {errors.apiKey}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          <button
-            onClick={handleImpersonate}
-            className="w-full py-3 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
-          >
-            Impersonate User
-          </button>
-        </div>
-        <div className="text-sm text-text-500 mt-4 text-center px-4 rounded-md">
+              <button
+                type="submit"
+                className="w-full py-3 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
+              >
+                Impersonate User
+              </button>
+            </Form>
+          )}
+        </Formik>
+
+        <div className="text-sm text-text-500 mt-2 text-center px-4 rounded-md">
           Note: This feature is only available for @danswer.ai administrators
         </div>
       </div>

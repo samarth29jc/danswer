@@ -2,7 +2,9 @@ import stripe
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Response
 
+from danswer.auth.users import auth_backend
 from danswer.auth.users import current_admin_user
 from danswer.auth.users import get_jwt_strategy
 from danswer.auth.users import get_tenant_id_for_email
@@ -16,6 +18,7 @@ from danswer.server.settings.store import store_settings
 from danswer.setup import setup_danswer
 from danswer.utils.logger import setup_logger
 from ee.danswer.auth.users import current_cloud_superuser_user
+from ee.danswer.auth.users import super_cloud_user_dep
 from ee.danswer.configs.app_configs import STRIPE_SECRET_KEY
 from ee.danswer.server.tenants.access import control_plane_dep
 from ee.danswer.server.tenants.billing import fetch_billing_information
@@ -143,25 +146,25 @@ async def create_customer_portal_session(_: User = Depends(current_admin_user)) 
 async def impersonate_user(
     impersonate_request: ImpersonateRequest,
     user: User = Depends(current_cloud_superuser_user),
-):
-    strategy = get_jwt_strategy()
+    __: str = Depends(super_cloud_user_dep),
+) -> Response:
+    """Allows a cloud superuser to impersonate another user by generating an impersonation JWT token"""
     tenant_id = get_tenant_id_for_email(impersonate_request.email)
-    with get_session_with_tenant(tenant_id) as tennat_session:
-        user = get_user_by_email(impersonate_request.email, tennat_session)
 
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        token = await strategy.write_token(user, True)
-        from fastapi.responses import JSONResponse
-
-        response = JSONResponse({})
-        # Set the JWT token as a cookie
-        response.set_cookie(
-            key="fastapiusersauth",
-            value=token,
-            httponly=True,
-            secure=True,
-            samesite="lax",
+    with get_session_with_tenant(tenant_id) as tenant_session:
+        user_to_impersonate = get_user_by_email(
+            impersonate_request.email, tenant_session
         )
-        return response
+        if user_to_impersonate is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        token = await get_jwt_strategy().write_impersonate_token(user_to_impersonate)
+
+    response = await auth_backend.transport.get_login_response(token)
+    response.set_cookie(
+        key="fastapiusersauth",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+    return response

@@ -33,4 +33,3 @@ class CheckoutSessionCreationResponse(BaseModel):
 
 class ImpersonateRequest(BaseModel):
     email: str
-    api_key: str

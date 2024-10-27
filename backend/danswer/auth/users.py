@@ -510,23 +510,32 @@ cookie_transport = CookieTransport(
 
 # This strategy is used to add tenant_id to the JWT token
 class TenantAwareJWTStrategy(JWTStrategy):
-    async def write_token(self, user: User, impersonate: bool = False) -> str:
-        if impersonate:
-            logger.info(f"Impersonating user {user.email}")
-
+    async def _create_token_data(self, user: User, impersonate: bool = False) -> dict:
         tenant_id = get_tenant_id_for_email(user.email)
         data = {
             "sub": str(user.id),
             "aud": self.token_audience,
             "tenant_id": tenant_id,
-            "impersonate": impersonate,
         }
+        if impersonate:
+            data["impersonate"] = ["true"]
+        return data
+
+    async def write_impersonate_token(self, user: User) -> str:
+        logger.info(f"Impersonating user {user.email}")
+        data = await self._create_token_data(user, impersonate=True)
+        return generate_jwt(
+            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
+        )
+
+    async def write_token(self, user: User) -> str:
+        data = await self._create_token_data(user)
         return generate_jwt(
             data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
         )
 
 
-def get_jwt_strategy() -> JWTStrategy:
+def get_jwt_strategy() -> TenantAwareJWTStrategy:
     return TenantAwareJWTStrategy(
         secret=USER_AUTH_SECRET,
         lifetime_seconds=SESSION_EXPIRE_TIME_SECONDS,
