@@ -38,10 +38,10 @@ export default function ImpersonatePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${values.apiKey}`, // Move API key to Authorization header
+          Authorization: `Bearer ${values.apiKey}`,
         },
-        body: JSON.stringify({ email: values.email }), // Only send non-sensitive data in body
-        credentials: "same-origin", // Ensures cookies are sent with request
+        body: JSON.stringify({ email: values.email }),
+        credentials: "same-origin",
       });
 
       if (!response.ok) {
