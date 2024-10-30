@@ -76,6 +76,8 @@ export interface ButtonProps
   asChild?: boolean;
   icon?: React.ElementType;
   tooltip?: string;
+  variant?: string;
+  size?: string;
   reverse?: boolean;
 }
 
@@ -83,7 +85,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
-      variant,
+      variant = "default",
       size = "sm",
       asChild = false,
       icon: Icon,
