@@ -907,9 +907,12 @@ class VespaIndex(DocumentIndex):
     ) -> list[InferenceChunkUncleaned]:
         """Retrieve random chunks matching the filters using Vespa's random ranking"""
         vespa_where_clauses = build_vespa_filters(filters)
+        # Remove the trailing 'and' if it exists
+        if vespa_where_clauses.strip().endswith("and"):
+            vespa_where_clauses = vespa_where_clauses.strip()[:-3].strip()
+
         yql = YQL_BASE.format(index_name=self.index_name) + vespa_where_clauses
 
-        # Use current timestamp as seed for randomization
         random_seed = random.randint(0, 1000000)
 
         params: dict[str, str | int | float] = {

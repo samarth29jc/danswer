@@ -17,9 +17,10 @@ logger = setup_logger()
 
 
 # More minimal request for generating a persona prompt
-class GeneratePersonaPromptRequest(BaseModel):
+class GenerateStarterMessageRequest(BaseModel):
     name: str
     description: str
+    instructions: str
     document_set_ids: list[int]
 
 

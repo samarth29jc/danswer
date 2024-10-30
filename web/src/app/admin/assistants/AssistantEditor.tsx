@@ -126,6 +126,7 @@ export function AssistantEditor({
   ];
 
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [hasEditedStarterMessage, setHasEditedStarterMessage] = useState(false);
 
   // state to persist across formik reformatting
   const [defautIconColor, _setDeafultIconColor] = useState(
@@ -255,7 +256,6 @@ export function AssistantEditor({
     name: string;
   }
 
-  // Create debounced refresh function
   const debouncedRefreshPrompts = debounce(
     async (values: any, setFieldValue: any) => {
       if (!autoStarterMessageEnabled) {
@@ -272,6 +272,7 @@ export function AssistantEditor({
             name: values.name,
             description: values.description,
             document_set_ids: values.document_set_ids,
+            instructions: values.system_prompt || values.task_prompt,
           }),
         });
 
@@ -292,8 +293,11 @@ export function AssistantEditor({
     useEffect(() => {
       // Only refresh if we have required fields and no errors
       if (
+        !hasEditedStarterMessage &&
+        !existingPersona &&
         values.name &&
         values.description &&
+        (values.system_prompt || values.task_prompt) &&
         Object.keys(errors).filter((key) => !key.startsWith("starter_messages"))
           .length === 0
       ) {
@@ -527,12 +531,9 @@ export function AssistantEditor({
             values.llm_model_version_override || defaultModelName || ""
           );
 
-          // This is necessary to refresh the starter messages
-          // when the name or description changes
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-
           return (
             <Form className="w-full text-text-950">
+              {/* Refresh starter messages when name or description changes */}
               <FormikPromptRefresh usePromptRefresh={usePromptRefresh} />
               <div className="w-full flex gap-x-2 justify-center">
                 <Popover
@@ -1155,6 +1156,9 @@ export function AssistantEditor({
                         isRefreshing={isRefreshing}
                         values={values.starter_messages}
                         arrayHelpers={arrayHelpers}
+                        touchStarterMessages={() => {
+                          setHasEditedStarterMessage(true);
+                        }}
                       />
                     )}
                   />

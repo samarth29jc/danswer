@@ -37,13 +37,13 @@ from danswer.file_store.file_store import get_default_file_store
 from danswer.file_store.models import ChatFileType
 from danswer.llm.answering.prompts.utils import build_dummy_prompt
 from danswer.llm.factory import get_default_llms
-from danswer.prompts.starter_messages import PERSONA_STARTER_MESSSAGE_CREATION_PROMPT
+from danswer.prompts.starter_messages import PERSONA_STARTER_MESSAGE_CREATION_PROMPT
 from danswer.search.models import IndexFilters
 from danswer.search.models import InferenceChunk
 from danswer.search.postprocessing.postprocessing import cleanup_chunks
 from danswer.search.preprocessing.access_filters import build_access_filters_for_user
 from danswer.server.features.persona.models import CreatePersonaRequest
-from danswer.server.features.persona.models import GeneratePersonaPromptRequest
+from danswer.server.features.persona.models import GenerateStarterMessageRequest
 from danswer.server.features.persona.models import ImageGenerationToolStatus
 from danswer.server.features.persona.models import PersonaSharedNotificationData
 from danswer.server.features.persona.models import PersonaSnapshot
@@ -335,16 +335,17 @@ def get_random_chunks_from_doc_sets(
 def generate_starter_messages(
     name: str,
     description: str,
+    instructions: str,
     document_set_ids: list[int],
     db_session: Session,
-    user: User | None = Depends(current_user),
+    user: User | None,
 ) -> list[StarterMessage]:
-    start_message_generation_prompt = PERSONA_STARTER_MESSSAGE_CREATION_PROMPT.format(
-        name=name, description=description
+    start_message_generation_prompt = PERSONA_STARTER_MESSAGE_CREATION_PROMPT.format(
+        name=name, description=description, instructions=instructions
     )
     _, fast_llm = get_default_llms(temperature=1.3)
 
-    if len(document_set_ids) > 0:
+    if document_set_ids:
         document_sets = get_document_sets_by_ids(
             document_set_ids=document_set_ids,
             db_session=db_session,
@@ -358,6 +359,7 @@ def generate_starter_messages(
 
         # Add example content context to the prompt
         chunk_contents = "\n".join(chunk.content.strip() for chunk in chunks)
+
         start_message_generation_prompt += (
             "\n\nExample content this assistant has access to:\n"
             "'''\n"
@@ -376,33 +378,38 @@ def generate_starter_messages(
 
     results = run_functions_in_parallel(function_calls=functions)
     for response in results.values():
-        response_dict = json.loads(response.content)
-        starter_message = StarterMessage(
-            name=response_dict["name"],
-            description=response_dict["description"],
-            message=response_dict["message"],
-        )
-        prompts.append(starter_message)
+        try:
+            response_dict = json.loads(response.content)
+            starter_message = StarterMessage(
+                name=response_dict["name"],
+                description=response_dict["description"],
+                message=response_dict["message"],
+            )
+            prompts.append(starter_message)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decoding failed: {e}")
+            continue
     return prompts
 
 
-# Based on an assistant schema, generates 4 prompts
 @basic_router.post("/assistant-prompt-refresh")
 def build_assistant_prompts(
-    generate_persona_prompt_request: GeneratePersonaPromptRequest,
+    generate_persona_prompt_request: GenerateStarterMessageRequest,
     db_session: Session = Depends(get_session),
     user: User | None = Depends(current_user),
 ) -> list[StarterMessage]:
     try:
+        logger.info(
+            "Generating starter messages for user: %s", user.id if user else "Anonymous"
+        )
         return generate_starter_messages(
             name=generate_persona_prompt_request.name,
             description=generate_persona_prompt_request.description,
+            instructions=generate_persona_prompt_request.instructions,
             document_set_ids=generate_persona_prompt_request.document_set_ids,
             db_session=db_session,
             user=user,
         )
-    except Exception:
+    except Exception as e:
         logger.exception("Failed to generate starter messages")
-        raise HTTPException(
-            status_code=500, detail="Failed to generate starter messages"
-        )
+        raise HTTPException(status_code=500, detail=str(e))

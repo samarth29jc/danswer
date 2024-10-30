@@ -1,15 +1,23 @@
-PERSONA_STARTER_MESSSAGE_CREATION_PROMPT = """
-Create a starter message for a chatbot. The response should include three parts:
+PERSONA_STARTER_MESSAGE_CREATION_PROMPT = """
+Create a starter message that a **user** might send to initiate a
+conversation with a chatbot assistant. Your response should include three parts:
 
-1. Name: A short, clear title for the prompt (e.g. 'Open Discussion', 'Project Planning')
-2. Description: A short explanation of what this prompt is for without full sentences (no more than a line)
-3. Message: The actual conversation starter that will be sent to the chatbot. This should be natural and engaging.
+1. **Title**: A short, engaging title that reflects the user's intent
+(e.g., 'Need Travel Advice', 'Question About Coding', 'Looking for Book Recommendations').
+2. **Description**: A brief explanation of the user's purpose or context,
+ written from the user's perspective (no more than one line).
+3. **Message**: The actual message that the user would send to the assistant.
+ This should be natural, engaging, and encourage a helpful response from the assistant.
 
-Make each part concise but inviting for user interaction.
-Context about the assistant - Name: {name}
-Description: {description}
+Ensure each part is concise and inviting for interaction.
+Vary the style, tone, and content to produce diverse outputs suitable for multiple iterations.
+
+**Context about the assistant:**
+- **Name**: {name}
+- **Description**: {description}
+- **Instructions**: {instructions}
 """
 
 
 if __name__ == "__main__":
-    print(PERSONA_STARTER_MESSSAGE_CREATION_PROMPT)
+    print(PERSONA_STARTER_MESSAGE_CREATION_PROMPT)
