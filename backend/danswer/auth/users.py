@@ -517,16 +517,7 @@ class TenantAwareJWTStrategy(JWTStrategy):
             "aud": self.token_audience,
             "tenant_id": tenant_id,
         }
-        if impersonate:
-            data["impersonate"] = "true"
         return data
-
-    async def write_impersonate_token(self, user: User) -> str:
-        logger.info(f"Impersonating user {user.email}")
-        data = await self._create_token_data(user, impersonate=True)
-        return generate_jwt(
-            data, self.encode_key, self.lifetime_seconds, algorithm=self.algorithm
-        )
 
     async def write_token(self, user: User) -> str:
         data = await self._create_token_data(user)

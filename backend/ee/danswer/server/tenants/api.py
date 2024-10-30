@@ -155,7 +155,7 @@ async def impersonate_user(
         )
         if user_to_impersonate is None:
             raise HTTPException(status_code=404, detail="User not found")
-        token = await get_jwt_strategy().write_impersonate_token(user_to_impersonate)
+        token = await get_jwt_strategy().write_token(user_to_impersonate)
 
     response = await auth_backend.transport.get_login_response(token)
     response.set_cookie(

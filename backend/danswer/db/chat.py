@@ -37,7 +37,6 @@ from danswer.search.models import SearchDoc as ServerSearchDoc
 from danswer.server.query_and_chat.models import ChatMessageDetail
 from danswer.tools.tool_runner import ToolCallFinalResult
 from danswer.utils.logger import setup_logger
-from shared_configs.contextvars import CLOUD_SUPERUSER_CONTEXTVAR
 
 
 logger = setup_logger()
@@ -51,8 +50,6 @@ def get_chat_session_by_id(
     is_shared: bool = False,
 ) -> ChatSession:
     stmt = select(ChatSession).where(ChatSession.id == chat_session_id)
-    if not CLOUD_SUPERUSER_CONTEXTVAR.get():
-        stmt = stmt.where(ChatSession.admin_created.is_(False))
 
     if is_shared:
         stmt = stmt.where(ChatSession.shared_status == ChatSessionSharedStatus.PUBLIC)
@@ -150,8 +147,6 @@ def get_chat_sessions_by_user(
     limit: int = 50,
 ) -> list[ChatSession]:
     stmt = select(ChatSession).where(ChatSession.user_id == user_id)
-    if not CLOUD_SUPERUSER_CONTEXTVAR.get():
-        stmt = stmt.where(ChatSession.admin_created.is_(False))
 
     if only_one_shot:
         stmt = stmt.where(ChatSession.one_shot.is_(True))
@@ -247,7 +242,6 @@ def create_chat_session(
         one_shot=one_shot,
         danswerbot_flow=danswerbot_flow,
         slack_thread_id=slack_thread_id,
-        admin_created=CLOUD_SUPERUSER_CONTEXTVAR.get(),
     )
 
     db_session.add(chat_session)

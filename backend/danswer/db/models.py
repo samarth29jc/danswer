@@ -957,8 +957,6 @@ class ChatSession(Base):
         String, nullable=True, default=None
     )
 
-    admin_created: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
     # the latest "overrides" specified by the user. These take precedence over
     # the attached persona. However, overrides specified directly in the
     # `send-message` call will take precedence over these.
