@@ -25,23 +25,6 @@ export default function StarterMessagesList({
   isRefreshing: boolean;
   touchStarterMessages: () => void;
 }) {
-  useEffect(() => {
-    const currentLength = values.length;
-    if (currentLength < 4) {
-      for (let i = currentLength; i < 4; i++) {
-        arrayHelpers.push({
-          name: "",
-          description: "",
-          message: "",
-        });
-      }
-    } else if (currentLength > 4) {
-      for (let i = currentLength - 1; i >= 4; i--) {
-        arrayHelpers.remove(i);
-      }
-    }
-  }, []);
-
   const { handleChange } = useFormikContext();
 
   const rows = values.reduce((acc: StarterMessage[][], curr, i) => {

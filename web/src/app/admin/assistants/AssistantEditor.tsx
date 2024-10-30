@@ -337,21 +337,19 @@ export function AssistantEditor({
             llm_relevance_filter: Yup.boolean().required(),
             llm_model_version_override: Yup.string().nullable(),
             llm_model_provider_override: Yup.string().nullable(),
-            starter_messages: Yup.array()
-              .of(
-                Yup.object().shape({
-                  name: Yup.string().required(
-                    "Each starter message must have a name"
-                  ),
-                  description: Yup.string().required(
-                    "Each starter message must have a description"
-                  ),
-                  message: Yup.string().required(
-                    "Each starter message must have a message"
-                  ),
-                })
-              )
-              .length(4),
+            starter_messages: Yup.array().of(
+              Yup.object().shape({
+                name: Yup.string().required(
+                  "Each starter message must have a name"
+                ),
+                description: Yup.string().required(
+                  "Each starter message must have a description"
+                ),
+                message: Yup.string().required(
+                  "Each starter message must have a message"
+                ),
+              })
+            ),
             search_start_date: Yup.date().nullable(),
             icon_color: Yup.string(),
             icon_shape: Yup.number(),
