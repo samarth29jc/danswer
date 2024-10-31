@@ -161,6 +161,14 @@ class TenantHandler:
         logger.debug(f"Found {len(tenant_ids)} total tenants in Postgres")
 
         for tenant_id in tenant_ids:
+            lock_key = f"tenant_lock:{tenant_id}"
+            pod_id = self.pod_id
+            acquired = self.redis_client.set(
+                lock_key, pod_id, nx=True, ex=TENANT_LOCK_EXPIRATION
+            )
+            if not acquired:
+                continue  # Another pod holds the lock
+
             with get_session_with_tenant(tenant_id) as db_session:
                 try:
                     token = CURRENT_TENANT_ID_CONTEXTVAR.set(tenant_id or "public")

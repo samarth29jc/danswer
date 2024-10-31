@@ -3,7 +3,7 @@
 import { generateRandomIconShape, createSVG } from "@/lib/assistantIconUtils";
 
 import { CCPairBasicInfo, DocumentSet, User } from "@/lib/types";
-import { Button, Divider, Italic } from "@tremor/react";
+import { Button, Divider, Italic, Textarea } from "@tremor/react";
 import { IsPublicGroupSelector } from "@/components/IsPublicGroupSelector";
 import {
   ArrayHelpers,
@@ -627,7 +627,10 @@ export function AssistantEditor({
                   otherwise specified below.
                   {admin &&
                     user?.preferences.default_model &&
-                    `  Your current (user-specific) default model is ${getDisplayNameForModel(destructureValue(user?.preferences?.default_model!).modelName)}`}
+                    `  Your current (user-specific) default model is ${getDisplayNameForModel(
+                      destructureValue(user?.preferences?.default_model!)
+                        .modelName
+                    )}`}
                 </p>
                 {admin ? (
                   <div className="mb-2 flex items-starts">
@@ -1094,6 +1097,7 @@ export function AssistantEditor({
                                             a client about a new billing feature
                                             we just released.&quot;
                                           </SubLabel>
+                                          af
                                           <Field
                                             name={`starter_messages[${index}].message`}
                                             className={`
@@ -1104,9 +1108,11 @@ export function AssistantEditor({
                                               w-full 
                                               py-2 
                                               px-3 
+                                              min-h-12
                                               mr-4
+                                              line-clamp-
                                           `}
-                                            as="textarea"
+                                            component={Textarea}
                                             autoComplete="off"
                                           />
                                           <ErrorMessage
